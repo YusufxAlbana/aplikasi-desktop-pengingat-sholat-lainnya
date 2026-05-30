@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
-import { GetPrayerTimes, SendNotification, GetQuranSurahs, GetQuranSurah } from '../wailsjs/go/main/App';
+import { GetPrayerTimes, SendNotification, GetQuranSurahs, GetQuranSurah, SetWidgetMode } from '../wailsjs/go/main/App';
 import { main } from '../wailsjs/go/models';
 
 const translations = {
@@ -24,11 +24,21 @@ const translations = {
     selectCity: "Pilih Kota/Wilayah",
     testAudio: "Test Audio",
     stopAudio: "Hentikan Adzan",
-    streak: "Streak Harian",
+    streak: "Streak Sholat",
     currentStreak: "Streak Saat Ini",
     bestStreak: "Streak Terbaik",
     streakLocked: "Belum masuk waktu",
     streakCompleted: "Semua Shalat Selesai!",
+    streakMissed: "Terlewat / Bolong",
+    weather: "Cuaca",
+    todayWeather: "Cuaca Hari Ini",
+    forecast: "Ramalan Cuaca Harian",
+    feelsLike: "Terasa Seperti",
+    humidity: "Kelembaban",
+    precipitation: "Curah Hujan",
+    windSpeed: "Kecepatan Angin",
+    widgetMode: "Mode Widget (Selalu di Atas & Kunci Jendela)",
+    widgetModeDesc: "Membuat aplikasi selalu di atas (Always on Top) dan mencegah penutupan jendela (seperti Rainmeter).",
   },
   en: {
     home: "Home",
@@ -50,11 +60,21 @@ const translations = {
     selectCity: "Select City/Region",
     testAudio: "Test Audio",
     stopAudio: "Stop Adhan",
-    streak: "Daily Streak",
+    streak: "Prayer Streak",
     currentStreak: "Current Streak",
     bestStreak: "Best Streak",
     streakLocked: "Not time yet",
     streakCompleted: "All Prayers Completed!",
+    streakMissed: "Missed",
+    weather: "Weather",
+    todayWeather: "Today's Weather",
+    forecast: "Daily Weather Forecast",
+    feelsLike: "Feels Like",
+    humidity: "Humidity",
+    precipitation: "Precipitation",
+    windSpeed: "Wind Speed",
+    widgetMode: "Widget Mode (Always on Top & Lock Window)",
+    widgetModeDesc: "Keep the window always on top and prevent closing (similar to Rainmeter widgets).",
   },
   ms: {
     home: "Laman Utama",
@@ -76,19 +96,52 @@ const translations = {
     selectCity: "Pilih Bandar/Kawasan",
     testAudio: "Uji Audio",
     stopAudio: "Hentikan Azan",
-    streak: "Streak Harian",
+    streak: "Streak Solat",
     currentStreak: "Streak Semasa",
     bestStreak: "Streak Terbaik",
     streakLocked: "Belum masuk waktu",
     streakCompleted: "Semua Solat Selesai!",
+    streakMissed: "Terlepas / Terlewat",
+    weather: "Cuaca",
+    todayWeather: "Cuaca Hari Ini",
+    forecast: "Ramalan Cuaca Harian",
+    feelsLike: "Terasa Seperti",
+    humidity: "Kelembapan",
+    precipitation: "Taburan Hujan",
+    windSpeed: "Kelajuan Angin",
+    widgetMode: "Mod Widget (Selalu di Atas & Kunci Tetingkap)",
+    widgetModeDesc: "Memastikan tetingkap sentiasa di atas dan menghalang aplikasi daripada ditutup (seperti Rainmeter).",
   }
+};
+
+const getWeatherInfo = (code: number, lang: 'id' | 'en' | 'ms') => {
+  const mapping: Record<number, { icon: string, desc: Record<string, string> }> = {
+    0: { icon: '☀️', desc: { id: 'Cerah', en: 'Clear Sky', ms: 'Cerah' } },
+    1: { icon: '🌤️', desc: { id: 'Cerah Berawan', en: 'Mainly Clear', ms: 'Cerah Berawan' } },
+    2: { icon: '⛅', desc: { id: 'Berawan Sebagian', en: 'Partly Cloudy', ms: 'Berawan Sebahagian' } },
+    3: { icon: '☁️', desc: { id: 'Mendung', en: 'Overcast', ms: 'Mendung' } },
+    45: { icon: '🌫️', desc: { id: 'Kabut', en: 'Fog', ms: 'Kabus' } },
+    48: { icon: '🌫️', desc: { id: 'Kabut Berembun', en: 'Depositing Rime Fog', ms: 'Kabus Berembun' } },
+    51: { icon: '🌧️', desc: { id: 'Gerimis Ringan', en: 'Light Drizzle', ms: 'Gerimis Ringan' } },
+    53: { icon: '🌧️', desc: { id: 'Gerimis Sedang', en: 'Moderate Drizzle', ms: 'Gerimis Sederhana' } },
+    55: { icon: '🌧️', desc: { id: 'Gerimis Lebat', en: 'Dense Drizzle', ms: 'Gerimis Lebat' } },
+    61: { icon: '🌧️', desc: { id: 'Hujan Ringan', en: 'Slight Rain', ms: 'Hujan Hanyut' } },
+    63: { icon: '🌧️', desc: { id: 'Hujan Sedang', en: 'Moderate Rain', ms: 'Hujan Sederhana' } },
+    65: { icon: '🌧️', desc: { id: 'Hujan Lebat', en: 'Heavy Rain', ms: 'Hujan Lebat' } },
+    80: { icon: '🌦️', desc: { id: 'Hujan Rintik', en: 'Slight Rain Showers', ms: 'Hujan Rintik' } },
+    81: { icon: '🌦️', desc: { id: 'Hujan Rintik Sedang', en: 'Moderate Rain Showers', ms: 'Hujan Rintik Sederhana' } },
+    82: { icon: '⛈️', desc: { id: 'Hujan Rintik Lebat', en: 'Violent Rain Showers', ms: 'Hujan Rintik Lebat' } },
+    95: { icon: '⛈️', desc: { id: 'Badai Petir', en: 'Thunderstorm', ms: 'Ribut Petir' } },
+  };
+
+  return mapping[code] || { icon: '☁️', desc: { id: 'Berawan', en: 'Cloudy', ms: 'Berawan' } };
 };
 
 const adhanSources = [
   { value: '/adzan/ATHAN-ALAFASY.mp3', label: 'Adzan Alafasy (Lokal)' },
   { value: '/adzan/AL-AQSA.mp3', label: 'Adzan Al-Aqsa (Lokal)' },
-  { value: "/adzan/AZAN par Salmân Al-'Utaybi (سلمان العتيبي).mp3", label: "Adzan Salman Al-Utaybi (Lokal)" },
-  { value: '/adzan/Adzan H. Muammar ZA.mp3', label: 'Adzan H. Muammar ZA (Lokal)' },
+  { value: '/adzan/azan-salman-al-utaybi.mp3', label: 'Adzan Salman Al-Utaybi (Lokal)' },
+  { value: '/adzan/adzan-h-muammar-za.mp3', label: 'Adzan H. Muammar ZA (Lokal)' },
   { value: '/adzan/Adzan-muhammad-taha-al-junayd.mp3', label: 'Adzan Taha Al-Junayd (Lokal)' },
   { value: 'https://cdn.islamic.network/quran/audio/surah/ar.alafasy/1.mp3', label: 'Makkah (Online)' },
   { value: 'https://cdn.islamic.network/quran/audio/surah/ar.alafasy/2.mp3', label: 'Madinah (Online)' }
@@ -303,6 +356,15 @@ function App() {
     };
   });
   
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [weatherData, setWeatherData] = useState<any>(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [widgetMode, setWidgetModeState] = useState(() => {
+    const saved = localStorage.getItem('adhan_widget_mode');
+    return saved === 'true';
+  });
+  
   const [timings, setTimings] = useState<Record<string, string>>({});
   const [nextPrayer, setNextPrayer] = useState<{name: string, time: string, diffStr: string} | null>(null);
   const [error, setError] = useState('');
@@ -317,6 +379,15 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
+  useEffect(() => {
+    try {
+      SetWidgetMode(widgetMode);
+      localStorage.setItem('adhan_widget_mode', String(widgetMode));
+    } catch (e) {
+      console.error("Failed to set widget mode:", e);
+    }
+  }, [widgetMode]);
+
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
@@ -325,6 +396,8 @@ function App() {
     try {
       const result = await GetPrayerTimes(city, country);
       setTimings(result.timings);
+      setLatitude(result.latitude);
+      setLongitude(result.longitude);
       setError('');
     } catch (err: any) {
       setError(String(err));
@@ -334,6 +407,25 @@ function App() {
   useEffect(() => {
     fetchTimings();
   }, [city, country]); 
+
+  useEffect(() => {
+    if (latitude === null || longitude === null) return;
+    
+    const fetchWeather = async () => {
+      setWeatherLoading(true);
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`);
+        const data = await res.json();
+        setWeatherData(data);
+      } catch (e) {
+        console.error("Failed to fetch weather:", e);
+      } finally {
+        setWeatherLoading(false);
+      }
+    };
+
+    fetchWeather();
+  }, [latitude, longitude]); 
 
   const loadSurahs = async () => {
     if (surahs.length > 0) return;
@@ -398,13 +490,11 @@ function App() {
 
   const togglePrayerCompleted = (prayer: string) => {
     setStreak(prev => {
-      let newCompleted = [...prev.completedPrayers];
-      if (newCompleted.includes(prayer)) {
-        newCompleted = newCompleted.filter(p => p !== prayer);
-      } else {
-        newCompleted.push(prayer);
+      if (prev.completedPrayers.includes(prayer)) {
+        return prev;
       }
 
+      const newCompleted = [...prev.completedPrayers, prayer];
       const completedAllNow = newCompleted.length === 5;
       const completedAllBefore = prev.completedPrayers.length === 5;
 
@@ -416,8 +506,6 @@ function App() {
         if (newCurrent > newBest) {
           newBest = newCurrent;
         }
-      } else if (!completedAllNow && completedAllBefore) {
-        newCurrent = Math.max(0, newCurrent - 1);
       }
 
       const updated = {
@@ -430,6 +518,54 @@ function App() {
       return updated;
     });
   };
+
+  useEffect(() => {
+    if (Object.keys(timings).length === 0) return;
+
+    const checkMissedPrayers = () => {
+      const prayerOrder = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+      let hasMissed = false;
+
+      const now = new Date();
+      const curHour = now.getHours();
+      const curMin = now.getMinutes();
+
+      for (let i = 0; i < 4; i++) {
+        const prayer = prayerOrder[i];
+        if (streak.completedPrayers.includes(prayer)) continue;
+
+        const pTime = timings[prayer];
+        if (!pTime) continue;
+
+        const nextPrayer = prayerOrder[i + 1];
+        const nextTime = timings[nextPrayer];
+        if (!nextTime) continue;
+
+        const [npHour, npMinute] = nextTime.split(':').map(Number);
+        const isNextPassed = curHour > npHour || (curHour === npHour && curMin >= npMinute);
+
+        if (isNextPassed) {
+          hasMissed = true;
+          break;
+        }
+      }
+
+      if (hasMissed && streak.currentStreak > 0) {
+        setStreak(prev => {
+          const updated = {
+            ...prev,
+            currentStreak: 0
+          };
+          localStorage.setItem('adhan_streak_data', JSON.stringify(updated));
+          return updated;
+        });
+      }
+    };
+
+    checkMissedPrayers();
+    const interval = setInterval(checkMissedPrayers, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
+  }, [timings, streak.completedPrayers, streak.currentStreak, view]);
 
   const openSurah = async (number: number) => {
     try {
@@ -524,13 +660,30 @@ function App() {
       />
       
       <nav className="sidebar">
-        <div className="sidebar-brand">
-          🌙 <br /> Pengingat
+        <div className="sidebar-brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
+          <img src="/logo.png" alt="Logo" style={{ width: '70px', height: '70px', objectFit: 'contain', borderRadius: '14px' }} />
+          <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--accent-color)' }}>Pengingat</span>
         </div>
-        <button className={view === 'home' ? 'active' : ''} onClick={() => setView('home')}>🏠 {t.home}</button>
-        <button className={view === 'quran' || view === 'quran-detail' ? 'active' : ''} onClick={() => setView('quran')}>📖 {t.quran}</button>
-        <button className={view === 'streak' ? 'active' : ''} onClick={() => setView('streak')}>🔥 {t.streak}</button>
-        <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}>⚙️ {t.settings}</button>
+        <button className={view === 'home' ? 'active' : ''} onClick={() => setView('home')}>
+          <img src="/logo homepage navbar.png" alt="Home" style={{ width: '22px', height: '22px', objectFit: 'contain' }} /> 
+          {t.home}
+        </button>
+        <button className={view === 'quran' || view === 'quran-detail' ? 'active' : ''} onClick={() => setView('quran')}>
+          <img src="/logo alquran.png" alt="Quran" style={{ width: '22px', height: '22px', objectFit: 'contain' }} /> 
+          {t.quran}
+        </button>
+        <button className={view === 'weather' ? 'active' : ''} onClick={() => setView('weather')}>
+          <img src="/logo cuaca navbar.png" alt="Weather" style={{ width: '22px', height: '22px', objectFit: 'contain' }} /> 
+          {t.weather}
+        </button>
+        <button className={view === 'streak' ? 'active' : ''} onClick={() => setView('streak')}>
+          <img src="/logo streak navbar.png" alt="Streak" style={{ width: '22px', height: '22px', objectFit: 'contain' }} /> 
+          {t.streak}
+        </button>
+        <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}>
+          <img src="/logo pengaturan navbar.png" alt="Settings" style={{ width: '22px', height: '22px', objectFit: 'contain' }} /> 
+          {t.settings}
+        </button>
         
         <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme" style={{marginTop: 'auto', marginBottom: '20px'}}>
           {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
@@ -540,8 +693,11 @@ function App() {
       <main className="main-area">
         {view === 'home' && (
           <div className="glass-panel">
-            <header className="header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
-              <h1 style={{ margin: '0 auto' }}>{t.home}</h1>
+            <header className="header" style={{ borderBottom: 'none', paddingBottom: 0, justifyContent: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <img src="/logo homepage navbar.png" alt="Home" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
+                <h1 style={{ margin: 0 }}>{t.home}</h1>
+              </div>
             </header>
 
             {error && <div className="error">{error}</div>}
@@ -554,18 +710,8 @@ function App() {
                 </div>
                 <p className="next-time" style={{ marginBottom: '20px' }}>{nextPrayer ? nextPrayer.time : ''}</p>
                 
-                <div className="location-selector" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginBottom: '30px'}}>
-                  <label style={{color: 'var(--text-secondary)', fontWeight: 600}}>{t.selectCity}:</label>
-                  <AnimatedDropdown 
-                    options={availableLocations}
-                    value={`${city},${country}`}
-                    onChange={(val: string) => {
-                      const [c, ctry] = val.split(',');
-                      setCity(c);
-                      setCountry(ctry);
-                    }}
-                    style={{maxWidth: '300px'}}
-                  />
+                <div className="location-display" style={{color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '25px', fontSize: '15px'}}>
+                  📍 {city}, {country}
                 </div>
               </div>
 
@@ -583,7 +729,10 @@ function App() {
 
         {view === 'quran' && (
           <div className="glass-panel full-height" style={{ display: 'flex', flexDirection: 'column' }}>
-            <h1 style={{ marginBottom: '15px' }}>{t.quran}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px' }}>
+              <img src="/logo alquran.png" alt="Quran" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
+              <h1 style={{ margin: 0 }}>{t.quran}</h1>
+            </div>
             
             <div className="search-container">
               <input 
@@ -645,8 +794,24 @@ function App() {
 
         {view === 'settings' && (
           <div className="glass-panel">
-            <h1>{t.settings}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '25px' }}>
+              <img src="/logo pengaturan navbar.png" alt="Settings" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
+              <h1 style={{ margin: 0 }}>{t.settings}</h1>
+            </div>
             <div className="settings-form">
+              <div className="form-group" style={{alignItems: 'flex-start', marginBottom: '15px'}}>
+                <label style={{marginBottom: '5px'}}>{t.selectCity}</label>
+                <AnimatedDropdown 
+                  options={availableLocations}
+                  value={`${city},${country}`}
+                  onChange={(val: string) => {
+                    const [c, ctry] = val.split(',');
+                    setCity(c);
+                    setCountry(ctry);
+                  }}
+                  style={{maxWidth: '300px'}}
+                />
+              </div>
               <div className="form-group" style={{alignItems: 'flex-start'}}>
                 <label style={{marginBottom: '5px'}}>{t.lang}</label>
                 <AnimatedDropdown 
@@ -682,6 +847,31 @@ function App() {
                   </button>
                 </div>
               </div>
+              <div className="form-group" style={{alignItems: 'flex-start', marginTop: '20px', borderTop: '1px solid var(--glass-border)', paddingTop: '20px'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%'}}>
+                  <div>
+                    <label style={{fontWeight: 700, display: 'block', color: 'var(--text-primary)', marginBottom: '4px'}}>{t.widgetMode}</label>
+                    <span style={{fontSize: '12px', color: 'var(--text-secondary)'}}>{t.widgetModeDesc}</span>
+                  </div>
+                  <button 
+                    onClick={() => setWidgetModeState(!widgetMode)}
+                    style={{
+                      background: widgetMode ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.1)',
+                      border: '1px solid var(--glass-border)',
+                      borderRadius: '20px',
+                      padding: '8px 16px',
+                      color: widgetMode ? 'white' : 'var(--text-primary)',
+                      fontFamily: 'inherit',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: widgetMode ? '0 0 10px var(--accent-glow)' : 'none'
+                    }}
+                  >
+                    {widgetMode ? (lang === 'en' ? 'Active' : 'Aktif') : (lang === 'en' ? 'Inactive' : 'Nonaktif')}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -689,7 +879,10 @@ function App() {
         {view === 'streak' && (
           <div className="glass-panel">
             <header className="header">
-              <h1>{t.streak}</h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <img src="/logo streak navbar.png" alt="Streak" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
+                <h1 style={{ margin: 0 }}>{t.streak}</h1>
+              </div>
               <div style={{color: 'var(--accent-color)', fontWeight: 'bold'}}>🔥 {streak.currentStreak} {lang === 'en' ? 'Days' : 'Hari'}</div>
             </header>
 
@@ -727,23 +920,44 @@ function App() {
               <div className="streak-checklist" style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
                 {['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].map(prayer => {
                   const pTime = timings[prayer] || '--:--';
+                  const isChecked = streak.completedPrayers.includes(prayer);
                   
                   let isUnlocked = false;
+                  let isMissed = false;
                   if (timings[prayer]) {
                     const [pHour, pMinute] = timings[prayer].split(':').map(Number);
                     const now = new Date();
                     const curHour = now.getHours();
                     const curMin = now.getMinutes();
                     isUnlocked = curHour > pHour || (curHour === pHour && curMin >= pMinute);
+
+                    if (!isChecked && isUnlocked) {
+                      const prayerOrder = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+                      const curIdx = prayerOrder.indexOf(prayer);
+                      if (curIdx < 4) {
+                        const nextPrayer = prayerOrder[curIdx + 1];
+                        const nextTime = timings[nextPrayer];
+                        if (nextTime) {
+                          const [npHour, npMinute] = nextTime.split(':').map(Number);
+                          const isNextPassed = curHour > npHour || (curHour === npHour && curMin >= npMinute);
+                          if (isNextPassed) {
+                            isMissed = true;
+                          }
+                        }
+                      }
+                    }
                   }
 
-                  const isChecked = streak.completedPrayers.includes(prayer);
+                  const handleItemClick = () => {
+                    if (isMissed || isChecked || !isUnlocked) return;
+                    togglePrayerCompleted(prayer);
+                  };
 
                   return (
                     <div 
                       key={prayer} 
-                      className={`streak-prayer-item ${isChecked ? 'completed' : ''} ${!isUnlocked ? 'locked' : ''}`}
-                      onClick={() => isUnlocked && togglePrayerCompleted(prayer)}
+                      className={`streak-prayer-item ${isChecked ? 'completed' : ''} ${isMissed ? 'missed' : ''} ${!isUnlocked ? 'locked' : ''}`}
+                      onClick={handleItemClick}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -751,9 +965,24 @@ function App() {
                         padding: '16px 20px',
                         borderRadius: '16px',
                         border: '1px solid var(--glass-border)',
-                        background: isChecked ? 'var(--accent-glow)' : 'var(--active-card)',
-                        cursor: isUnlocked ? 'pointer' : 'not-allowed',
-                        opacity: isUnlocked ? 1 : 0.6,
+                        borderColor: isChecked 
+                          ? 'var(--accent-color)' 
+                          : isMissed 
+                          ? 'rgba(239, 68, 68, 0.4)' 
+                          : 'var(--glass-border)',
+                        background: isChecked 
+                          ? 'var(--accent-glow)' 
+                          : isMissed 
+                          ? 'rgba(239, 68, 68, 0.05)' 
+                          : 'var(--active-card)',
+                        cursor: isChecked 
+                          ? 'default' 
+                          : isMissed 
+                          ? 'not-allowed' 
+                          : isUnlocked 
+                          ? 'pointer' 
+                          : 'not-allowed',
+                        opacity: isChecked || isUnlocked ? 1 : 0.6,
                         transition: 'all 0.3s ease'
                       }}
                     >
@@ -762,25 +991,44 @@ function App() {
                           width: '24px',
                           height: '24px',
                           borderRadius: '8px',
-                          border: `2px solid ${isChecked ? 'var(--accent-color)' : 'var(--text-secondary)'}`,
-                          background: isChecked ? 'var(--accent-color)' : 'transparent',
+                          border: `2px solid ${
+                            isChecked 
+                              ? 'var(--accent-color)' 
+                              : isMissed 
+                              ? '#ef4444' 
+                              : 'var(--text-secondary)'
+                          }`,
+                          background: isChecked 
+                            ? 'var(--accent-color)' 
+                            : isMissed 
+                            ? 'rgba(239, 68, 68, 0.1)' 
+                            : 'transparent',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          color: 'white',
+                          color: isChecked ? 'white' : '#ef4444',
+                          fontWeight: 'bold',
                           transition: 'all 0.2s'
                         }}>
                           {isChecked && '✓'}
+                          {isMissed && '✗'}
                         </div>
-                        <span style={{fontWeight: 700, color: 'var(--text-primary)'}}>{prayer}</span>
+                        <span style={{
+                          fontWeight: 700, 
+                          color: isMissed ? 'var(--text-secondary)' : 'var(--text-primary)',
+                          textDecoration: isChecked ? 'line-through' : 'none',
+                          opacity: isMissed ? 0.7 : 1
+                        }}>
+                          {prayer}
+                        </span>
                       </div>
                       <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
                         <span style={{color: 'var(--text-secondary)', fontWeight: 600}}>{pTime}</span>
                         {!isUnlocked && (
                           <span style={{
                             fontSize: '11px', 
-                            background: 'rgba(255,0,0,0.1)', 
-                            color: '#ef4444', 
+                            background: 'rgba(255,0,0,0.05)', 
+                            color: 'var(--text-secondary)', 
                             padding: '4px 8px', 
                             borderRadius: '6px',
                             fontWeight: 600,
@@ -791,7 +1039,19 @@ function App() {
                             🔒 {t.streakLocked}
                           </span>
                         )}
-                        {isUnlocked && !isChecked && (
+                        {isMissed && (
+                          <span style={{
+                            fontSize: '11px', 
+                            background: 'rgba(239, 68, 68, 0.1)', 
+                            color: '#ef4444', 
+                            padding: '4px 8px', 
+                            borderRadius: '6px',
+                            fontWeight: 600
+                          }}>
+                            ❌ {t.streakMissed}
+                          </span>
+                        )}
+                        {isUnlocked && !isChecked && !isMissed && (
                           <span style={{
                             fontSize: '11px', 
                             background: 'var(--accent-glow)', 
@@ -830,6 +1090,122 @@ function App() {
                     : 'Dedikasi luar biasa! Teruskan menjaga streak Anda besok.'}
                 </p>
               </div>
+            )}
+          </div>
+        )}
+
+        {view === 'weather' && (
+          <div className="glass-panel">
+            <header className="header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <img src="/logo cuaca navbar.png" alt="Weather" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
+                <h1 style={{ margin: 0 }}>{t.weather}</h1>
+              </div>
+              <div style={{color: 'var(--accent-color)', fontWeight: 'bold'}}>📍 {city}, {country}</div>
+            </header>
+
+            {weatherLoading ? (
+              <div className="loading" style={{textAlign: 'center', padding: '40px'}}>{t.loading}</div>
+            ) : weatherData && weatherData.current ? (() => {
+              const current = weatherData.current;
+              const daily = weatherData.daily;
+              const curWeather = getWeatherInfo(current.weather_code, lang);
+
+              return (
+                <div className="weather-content" style={{display: 'flex', flexDirection: 'column', gap: '30px'}}>
+                  <div className="today-weather-card" style={{
+                    background: 'var(--active-card)',
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: '20px',
+                    padding: '30px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '15px',
+                    textAlign: 'center',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.05)'
+                  }}>
+                    <span style={{fontSize: '80px', lineHeight: 1, filter: 'drop-shadow(0 0 15px var(--accent-glow))'}}>{curWeather.icon}</span>
+                    <div>
+                      <h2 style={{fontSize: '48px', fontWeight: 700, margin: 0, color: 'var(--text-primary)'}}>{Math.round(current.temperature_2m)}°C</h2>
+                      <p style={{fontSize: '18px', fontWeight: 600, margin: '5px 0 0 0', color: 'var(--accent-color)'}}>{curWeather.desc[lang] || curWeather.desc['id']}</p>
+                    </div>
+
+                    <div className="weather-sub-stats" style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                      gap: '15px',
+                      width: '100%',
+                      marginTop: '15px',
+                      borderTop: '1px solid var(--glass-border)',
+                      paddingTop: '20px'
+                    }}>
+                      <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px'}}>
+                        <span style={{fontSize: '12px', color: 'var(--text-secondary)'}}>{t.feelsLike}</span>
+                        <strong style={{fontSize: '16px', color: 'var(--text-primary)'}}>{Math.round(current.apparent_temperature)}°C</strong>
+                      </div>
+                      <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px'}}>
+                        <span style={{fontSize: '12px', color: 'var(--text-secondary)'}}>{t.humidity}</span>
+                        <strong style={{fontSize: '16px', color: 'var(--text-primary)'}}>{current.relative_humidity_2m}%</strong>
+                      </div>
+                      <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px'}}>
+                        <span style={{fontSize: '12px', color: 'var(--text-secondary)'}}>{t.precipitation}</span>
+                        <strong style={{fontSize: '16px', color: 'var(--text-primary)'}}>{current.precipitation} mm</strong>
+                      </div>
+                      <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px'}}>
+                        <span style={{fontSize: '12px', color: 'var(--text-secondary)'}}>{t.windSpeed}</span>
+                        <strong style={{fontSize: '16px', color: 'var(--text-primary)'}}>{current.wind_speed_10m} km/h</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 style={{fontSize: '18px', color: 'var(--text-primary)', marginBottom: '15px'}}>{t.forecast}</h3>
+                    <div className="forecast-grid" style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
+                      gap: '12px'
+                    }}>
+                      {daily.time.slice(1, 6).map((timeStr: string, idx: number) => {
+                        const dayCode = daily.weather_code[idx + 1];
+                        const dayWeather = getWeatherInfo(dayCode, lang);
+                        const dayName = new Date(timeStr).toLocaleDateString(lang === 'ms' ? 'ms-MY' : lang === 'en' ? 'en-US' : 'id-ID', { weekday: 'long' });
+
+                        return (
+                          <div 
+                            key={timeStr} 
+                            style={{
+                              background: 'var(--active-card)',
+                              border: '1px solid var(--glass-border)',
+                              borderRadius: '16px',
+                              padding: '15px 10px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: '8px',
+                              textAlign: 'center',
+                              transition: 'transform 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                          >
+                            <span style={{fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)'}}>{dayName}</span>
+                            <span style={{fontSize: '36px', lineHeight: 1}}>{dayWeather.icon}</span>
+                            <span style={{fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)'}}>
+                              {Math.round(daily.temperature_2m_max[idx + 1])}° / {Math.round(daily.temperature_2m_min[idx + 1])}°
+                            </span>
+                            <span style={{fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 500, lineHeight: 1.2}}>
+                              {dayWeather.desc[lang] || dayWeather.desc['id']}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })() : (
+              <div style={{textAlign: 'center', padding: '40px', color: 'var(--text-secondary)'}}>Failed to load weather data</div>
             )}
           </div>
         )}

@@ -9,11 +9,13 @@ import (
 	"net/url"
 
 	"github.com/gen2brain/beeep"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
 type App struct {
-	ctx context.Context
+	ctx        context.Context
+	widgetMode bool
 }
 
 // NewApp creates a new App application struct
@@ -23,6 +25,18 @@ func NewApp() *App {
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+}
+
+// SetWidgetMode enables/disables always on top and prevents closing
+func (a *App) SetWidgetMode(enable bool) {
+	a.widgetMode = enable
+	runtime.WindowSetAlwaysOnTop(a.ctx, enable)
+}
+
+// onBeforeClose is called when the user attempts to close the window.
+// Returning true prevents the window from closing.
+func (a *App) onBeforeClose(ctx context.Context) bool {
+	return a.widgetMode
 }
 
 type PrayerResult struct {

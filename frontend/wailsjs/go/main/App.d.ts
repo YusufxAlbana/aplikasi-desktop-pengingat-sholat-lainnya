@@ -11,3 +11,5 @@ export function GetQuranSurah(arg1:number):Promise<main.SurahDetail>;
 export function GetQuranSurahs():Promise<Array<main.Surah>>;
 
 export function SendNotification(arg1:string,arg2:string):Promise<void>;
+
+export function SetWidgetMode(arg1:boolean):Promise<void>;
