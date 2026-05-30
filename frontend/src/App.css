@@ -1,0 +1,636 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
+
+:root {
+  /* LIGHT MODE (Default) - Islamic Theme */
+  --bg-color: #f8fdf9;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(16, 185, 129, 0.2);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --accent-color: #059669; /* Emerald */
+  --accent-glow: rgba(5, 150, 105, 0.2);
+  --active-card: rgba(5, 150, 105, 0.08);
+  --gold-accent: #d97706;
+}
+
+[data-theme='dark'] {
+  /* DARK MODE - Islamic Theme */
+  --bg-color: #022c22; /* Very deep green */
+  --glass-bg: rgba(2, 44, 34, 0.6);
+  --glass-border: rgba(251, 191, 36, 0.15);
+  --text-primary: #f8fafc;
+  --text-secondary: #a7f3d0;
+  --accent-color: #fbbf24; /* Gold */
+  --accent-glow: rgba(251, 191, 36, 0.2);
+  --active-card: rgba(251, 191, 36, 0.1);
+  --gold-accent: #fcd34d;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-color);
+  background-image: 
+    radial-gradient(at 0% 0%, var(--accent-glow) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(251, 191, 36, 0.1) 0px, transparent 50%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* LAYOUT */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 250px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  z-index: 10;
+}
+
+.sidebar-brand {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 30px;
+  color: var(--accent-color);
+  line-height: 1.2;
+}
+
+.sidebar button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 15px 20px;
+  text-align: left;
+  font-size: 16px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-left: 4px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar button:hover, .sidebar button.active {
+  background: var(--active-card);
+  color: var(--accent-color);
+  border-left-color: var(--accent-color);
+}
+
+.theme-toggle {
+  margin: 0 20px;
+  border-radius: 8px !important;
+  border: 1px solid var(--glass-border) !important;
+  justify-content: center;
+}
+
+.main-area {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* PANELS */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 40px;
+  width: 100%;
+  max-width: 800px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.glass-panel.full-height {
+  height: calc(100vh - 60px);
+  box-sizing: border-box;
+}
+
+[data-theme='dark'] .glass-panel {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* HOME / HEADER */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 20px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(to right, var(--accent-color), var(--gold-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.location-inputs {
+  display: flex;
+  gap: 10px;
+}
+
+.location-inputs input {
+  background: var(--active-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s;
+  width: 120px;
+}
+
+.location-inputs input:focus {
+  border-color: var(--accent-color);
+}
+
+.location-inputs button, .test-btn, .back-btn {
+  background: linear-gradient(135deg, var(--accent-color), var(--gold-accent));
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: white;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.location-inputs button:hover, .test-btn:hover, .back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.test-btn.stop {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+}
+
+.test-btn.stop:hover {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+}
+
+/* TIMINGS */
+.countdown-section { text-align: center; }
+.countdown-section h2 { margin: 0; font-size: 18px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 2px; }
+.countdown-timer { font-size: 72px; font-weight: 700; margin: 10px 0; font-variant-numeric: tabular-nums; text-shadow: 0 0 30px var(--accent-glow); }
+.next-time { margin: 0; font-size: 24px; color: var(--accent-color); font-weight: 700; }
+
+.timings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+}
+
+.timing-card {
+  background: var(--active-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+.timing-card:hover { transform: translateY(-5px); border-color: var(--accent-color); }
+.timing-card.active { background: var(--accent-glow); border-color: var(--accent-color); box-shadow: 0 0 15px var(--accent-glow); }
+.timing-name { font-size: 14px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; }
+.timing-time { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+
+/* QURAN */
+.surah-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 15px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.surah-item {
+  background: var(--active-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.surah-item:hover {
+  transform: translateX(5px);
+  border-color: var(--accent-color);
+}
+
+.surah-number {
+  background: var(--accent-glow);
+  color: var(--accent-color);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.surah-names {
+  display: flex;
+  flex-direction: column;
+}
+.surah-names strong { color: var(--text-primary); font-size: 16px; }
+.surah-names span { color: var(--text-secondary); font-size: 14px; }
+
+.ayah-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.ayah-item {
+  background: var(--active-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.ayah-top {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+}
+
+.ayah-number {
+  background: var(--accent-glow);
+  color: var(--accent-color);
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.ayah-text {
+  font-size: 24px;
+  line-height: 1.8;
+  margin: 0;
+  text-align: right;
+  flex: 1;
+  font-family: 'Amiri', serif; /* Optional arabic font */
+}
+
+.ayah-audio {
+  width: 100%;
+  height: 35px;
+  outline: none;
+}
+
+/* QIBLA */
+.qibla-panel {
+  text-align: center;
+  align-items: center;
+}
+
+.compass-container {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 4px solid var(--accent-color);
+  position: relative;
+  margin: 40px auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 30px var(--accent-glow);
+}
+
+.compass {
+  font-size: 80px;
+  color: var(--gold-accent);
+  transition: transform 1s ease-out;
+  transform-origin: center center;
+}
+
+.qibla-degree {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+.coords-text {
+  color: var(--text-secondary);
+}
+
+/* SETTINGS */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.form-group select {
+  background: var(--active-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+.form-group select:focus {
+  border-color: var(--accent-color);
+}
+
+/* CUSTOM ANIMATED DROPDOWN */
+.custom-dropdown-container {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: 250px;
+}
+
+.custom-dropdown-button {
+  width: 100%;
+  padding: 10px 15px;
+  border-radius: 10px;
+  border: 2px solid var(--glass-border);
+  background: var(--active-card);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s;
+}
+
+.custom-dropdown-button:hover {
+  border-color: var(--accent-color);
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  margin-top: 5px;
+  z-index: 100;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: max-height 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.custom-dropdown-menu.open {
+  max-height: 300px;
+  opacity: 1;
+  transform: translateY(0);
+  overflow-y: auto;
+}
+
+.custom-dropdown-item {
+  padding: 12px 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: var(--text-primary);
+  font-weight: 500;
+  text-align: left;
+}
+
+.custom-dropdown-item:hover {
+  background: var(--active-card);
+  color: var(--accent-color);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.5); /* Accent color with opacity */
+}
+
+/* Custom Search Input */
+.search-container {
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.custom-search-input {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: 2px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.3s;
+  box-sizing: border-box;
+}
+
+.custom-search-input:focus {
+  border-color: var(--accent-color);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+}
+
+.custom-search-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+/* CUSTOM PLAYERS IN QURAN DETAIL */
+.custom-ayah-player {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  padding: 12px 20px;
+  border-radius: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-ayah-player.active {
+  background: var(--active-card);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.custom-play-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--accent-color), var(--gold-accent));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px var(--accent-glow);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.custom-play-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 15px var(--accent-glow);
+}
+
+.custom-play-btn:active {
+  transform: scale(0.95);
+}
+
+.custom-player-progress-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.custom-player-progress-bar-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  transition: height 0.2s;
+}
+
+.custom-player-progress-bar-track:hover {
+  height: 8px;
+}
+
+.custom-player-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--accent-color), var(--gold-accent));
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+.custom-player-time-display {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sound Wave Animation */
+.custom-player-waves {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 16px;
+  width: 25px;
+  margin-left: 5px;
+  flex-shrink: 0;
+}
+
+.wave-bar {
+  width: 3px;
+  background: var(--accent-color);
+  border-radius: 2px;
+  animation: bounce 1s infinite alternate;
+}
+
+.bar-1 { height: 10%; animation-delay: 0.1s; }
+.bar-2 { height: 10%; animation-delay: 0.4s; }
+.bar-3 { height: 10%; animation-delay: 0.2s; }
+.bar-4 { height: 10%; animation-delay: 0.6s; }
+
+@keyframes bounce {
+  100% {
+    height: 100%;
+  }
+}
